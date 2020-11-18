@@ -37,13 +37,6 @@ func addAnnotationMig(mg *Migrator) {
 	mg.AddMigration("Drop old annotation table v4", NewDropTableMigration("annotation"))
 	mg.AddMigration("create annotation table v5", NewAddTableMigration(table))
 
-	// create indices
-	mg.AddMigration("add index annotation 0 v3", NewAddIndexMigration(table, table.Indices[0]))
-	mg.AddMigration("add index annotation 1 v3", NewAddIndexMigration(table, table.Indices[1]))
-	mg.AddMigration("add index annotation 2 v3", NewAddIndexMigration(table, table.Indices[2]))
-	mg.AddMigration("add index annotation 3 v3", NewAddIndexMigration(table, table.Indices[3]))
-	mg.AddMigration("add index annotation 4 v3", NewAddIndexMigration(table, table.Indices[4]))
-
 	mg.AddMigration("Update annotation table charset", NewTableCharsetMigration("annotation", []*Column{
 		{Name: "type", Type: DB_NVarchar, Length: 25, Nullable: false},
 		{Name: "title", Type: DB_Text, Nullable: false},
@@ -57,6 +50,13 @@ func addAnnotationMig(mg *Migrator) {
 	mg.AddMigration("Add column region_id to annotation table", NewAddColumnMigration(table, &Column{
 		Name: "region_id", Type: DB_BigInt, Nullable: true, Default: "0",
 	}))
+
+	// create indices
+	mg.AddMigration("add index annotation 0 v3", NewAddIndexMigration(table, table.Indices[0]))
+	mg.AddMigration("add index annotation 1 v3", NewAddIndexMigration(table, table.Indices[1]))
+	mg.AddMigration("add index annotation 2 v3", NewAddIndexMigration(table, table.Indices[2]))
+	mg.AddMigration("add index annotation 3 v3", NewAddIndexMigration(table, table.Indices[3]))
+	mg.AddMigration("add index annotation 4 v3", NewAddIndexMigration(table, table.Indices[4]))
 
 	categoryIdIndex := &Index{Cols: []string{"org_id", "category_id"}, Type: IndexType}
 	mg.AddMigration("Drop category_id index", NewDropIndexMigration(table, categoryIdIndex))

@@ -235,6 +235,21 @@ func (ss *SQLStore) buildConnectionString() (string, error) {
 			ss.dbCfg.ClientKeyPath, ss.dbCfg.CaCertPath)
 
 		cnnstr += ss.buildExtraConnectionString(' ')
+	case migrator.MSSQL:
+		addr, err := util.SplitHostPortDefault(ss.dbCfg.Host, "127.0.0.1", "1433")
+		if err != nil {
+			return "", errutil.Wrapf(err, "Invalid host specifier '%s'", ss.dbCfg.Host)
+		}
+
+		if ss.dbCfg.Pwd == "" {
+			ss.dbCfg.Pwd = "''"
+		}
+		if ss.dbCfg.User == "" {
+			ss.dbCfg.User = "''"
+		}
+
+		cnnstr = fmt.Sprintf("server=%s;port=%s;database=%s;user id=%s;password=%s;", addr.Host, addr.Port, ss.dbCfg.Name, ss.dbCfg.User, ss.dbCfg.Pwd)
+		cnnstr += ss.buildExtraConnectionString('?')
 	case migrator.SQLite:
 		// special case for tests
 		if !filepath.IsAbs(ss.dbCfg.Path) {
@@ -398,6 +413,10 @@ func InitTestDB(t ITestDB) *SQLStore {
 		case "postgres":
 			if _, err := sec.NewKey("connection_string", sqlutil.PostgresTestDB().ConnStr); err != nil {
 				t.Fatalf("Failed to create key: %s", err)
+			}
+		case "mssql":
+			if _, err := sec.NewKey("connection_string", sqlutil.MSSQLTestDB().ConnStr); err != nil {
+				t.Fatalf("Failed to create key: $s", err)
 			}
 		default:
 			if _, err := sec.NewKey("connection_string", sqlutil.SQLite3TestDB().ConnStr); err != nil {

@@ -74,7 +74,6 @@ func addUserMigrations(mg *Migrator) {
 	}
 
 	mg.AddMigration("create user table v2", NewAddTableMigration(userV2))
-	addTableIndicesMigrations(mg, "v2", userV2)
 
 	//------- copy data from v1 to v2 -------------------
 	mg.AddMigration("copy data_source v1 to v2", NewCopyTableDataMigration("user", "user_v1", map[string]string{
@@ -109,6 +108,8 @@ func addUserMigrations(mg *Migrator) {
 		{Name: "company", Type: DB_NVarchar, Length: 255, Nullable: true},
 		{Name: "theme", Type: DB_NVarchar, Length: 255, Nullable: true},
 	}))
+
+	addTableIndicesMigrations(mg, "v2", userV2)
 
 	mg.AddMigration("Add last_seen_at column to user", NewAddColumnMigration(userV2, &Column{
 		Name: "last_seen_at", Type: DB_DateTime, Nullable: true,

@@ -57,9 +57,6 @@ func addApiKeyMigrations(mg *Migrator) {
 	// create v2 table
 	mg.AddMigration("create api_key table v2", NewAddTableMigration(apiKeyV2))
 
-	// add v2 indíces
-	addTableIndicesMigrations(mg, "v2", apiKeyV2)
-
 	//------- copy data from v1 to v2 -------------------
 	mg.AddMigration("copy api_key v1 to v2", NewCopyTableDataMigration("api_key", "api_key_v1", map[string]string{
 		"id":      "id",
@@ -82,4 +79,7 @@ func addApiKeyMigrations(mg *Migrator) {
 	mg.AddMigration("Add expires to api_key table", NewAddColumnMigration(apiKeyV2, &Column{
 		Name: "expires", Type: DB_BigInt, Nullable: true,
 	}))
+
+	// add v2 indíces
+	addTableIndicesMigrations(mg, "v2", apiKeyV2)
 }

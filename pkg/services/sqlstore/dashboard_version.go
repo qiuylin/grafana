@@ -95,11 +95,10 @@ func deleteExpiredVersions(cmd *models.DeleteExpiredVersionsCommand, perBatch in
 					GROUP BY dashboard_id
 				) AS vtd
 				WHERE dashboard_version.dashboard_id=vtd.dashboard_id
-				AND version < vtd.min + vtd.count - ?
-				LIMIT ?`
+				AND version < vtd.min + vtd.count - ?`
 
 			var versionIdsToDelete []interface{}
-			err := sess.SQL(versionIdsToDeleteQuery, versionsToKeep, perBatch).Find(&versionIdsToDelete)
+			err := sess.SQL(versionIdsToDeleteQuery, versionsToKeep).Limit(perBatch).Find(&versionIdsToDelete)
 			if err != nil {
 				return err
 			}

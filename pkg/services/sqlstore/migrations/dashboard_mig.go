@@ -73,8 +73,7 @@ func addDashboardMigration(mg *Migrator) {
 
 	// recreate table
 	mg.AddMigration("create dashboard v2", NewAddTableMigration(dashboardV2))
-	// recreate indices
-	addTableIndicesMigrations(mg, "v2", dashboardV2)
+
 	// copy data
 	mg.AddMigration("copy dashboard v1 to v2", NewCopyTableDataMigration("dashboard", "dashboard_v1", map[string]string{
 		"id":      "id",
@@ -108,22 +107,9 @@ func addDashboardMigration(mg *Migrator) {
 		Name: "gnet_id", Type: DB_BigInt, Nullable: true,
 	}))
 
-	mg.AddMigration("Add index for gnetId in dashboard", NewAddIndexMigration(dashboardV2, &Index{
-		Cols: []string{"gnet_id"}, Type: IndexType,
-	}))
-
 	// add column to store plugin_id
 	mg.AddMigration("Add column plugin_id in dashboard", NewAddColumnMigration(dashboardV2, &Column{
 		Name: "plugin_id", Type: DB_NVarchar, Nullable: true, Length: 189,
-	}))
-
-	mg.AddMigration("Add index for plugin_id in dashboard", NewAddIndexMigration(dashboardV2, &Index{
-		Cols: []string{"org_id", "plugin_id"}, Type: IndexType,
-	}))
-
-	// dashboard_id index for dashboard_tag table
-	mg.AddMigration("Add index for dashboard_id in dashboard_tag", NewAddIndexMigration(dashboardTagV1, &Index{
-		Cols: []string{"dashboard_id"}, Type: IndexType,
 	}))
 
 	mg.AddMigration("Update dashboard table charset", NewTableCharsetMigration("dashboard", []*Column{
@@ -131,6 +117,21 @@ func addDashboardMigration(mg *Migrator) {
 		{Name: "title", Type: DB_NVarchar, Length: 255, Nullable: false},
 		{Name: "plugin_id", Type: DB_NVarchar, Nullable: true, Length: 189},
 		{Name: "data", Type: DB_MediumText, Nullable: false},
+	}))
+	
+	// recreate indices
+	addTableIndicesMigrations(mg, "v2", dashboardV2)
+
+	mg.AddMigration("Add index for gnetId in dashboard", NewAddIndexMigration(dashboardV2, &Index{
+		Cols: []string{"gnet_id"}, Type: IndexType,
+	}))
+
+	mg.AddMigration("Add index for plugin_id in dashboard", NewAddIndexMigration(dashboardV2, &Index{
+		Cols: []string{"org_id", "plugin_id"}, Type: IndexType,
+	}))
+
+	mg.AddMigration("Add index for dashboard_id in dashboard_tag", NewAddIndexMigration(dashboardTagV1, &Index{
+		Cols: []string{"dashboard_id"}, Type: IndexType,
 	}))
 
 	mg.AddMigration("Update dashboard_tag table charset", NewTableCharsetMigration("dashboard_tag", []*Column{

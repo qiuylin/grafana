@@ -22,10 +22,10 @@ func addQuotaMigration(mg *Migrator) {
 	}
 	mg.AddMigration("create quota table v1", NewAddTableMigration(quotaV1))
 
-	//-------  indexes ------------------
-	addTableIndicesMigrations(mg, "v1", quotaV1)
-
 	mg.AddMigration("Update quota table charset", NewTableCharsetMigration("quota", []*Column{
 		{Name: "target", Type: DB_NVarchar, Length: 190, Nullable: false},
 	}))
+
+	//-------  indexes ------------------
+	addTableIndicesMigrations(mg, "v1", quotaV1)
 }

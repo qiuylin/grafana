@@ -39,6 +39,16 @@ func addAlertMigrations(mg *Migrator) {
 	// create table
 	mg.AddMigration("create alert table v1", NewAddTableMigration(alertV1))
 
+	mg.AddMigration("Update alert table charset", NewTableCharsetMigration("alert", []*Column{
+		{Name: "name", Type: DB_NVarchar, Length: 255, Nullable: false},
+		{Name: "message", Type: DB_Text, Nullable: false},
+		{Name: "state", Type: DB_NVarchar, Length: 190, Nullable: false},
+		{Name: "settings", Type: DB_Text, Nullable: false},
+		{Name: "severity", Type: DB_Text, Nullable: false},
+		{Name: "execution_error", Type: DB_Text, Nullable: false},
+		{Name: "eval_data", Type: DB_Text, Nullable: true},
+	}))
+
 	// create indices
 	mg.AddMigration("add index alert org_id & id ", NewAddIndexMigration(alertV1, alertV1.Indices[0]))
 	mg.AddMigration("add index alert state", NewAddIndexMigration(alertV1, alertV1.Indices[1]))
@@ -117,23 +127,13 @@ func addAlertMigrations(mg *Migrator) {
 		Name: "disable_resolve_message", Type: DB_Bool, Nullable: false, Default: "0",
 	}))
 
-	mg.AddMigration("add index alert_notification org_id & name", NewAddIndexMigration(alert_notification, alert_notification.Indices[0]))
-
-	mg.AddMigration("Update alert table charset", NewTableCharsetMigration("alert", []*Column{
-		{Name: "name", Type: DB_NVarchar, Length: 255, Nullable: false},
-		{Name: "message", Type: DB_Text, Nullable: false},
-		{Name: "state", Type: DB_NVarchar, Length: 190, Nullable: false},
-		{Name: "settings", Type: DB_Text, Nullable: false},
-		{Name: "severity", Type: DB_Text, Nullable: false},
-		{Name: "execution_error", Type: DB_Text, Nullable: false},
-		{Name: "eval_data", Type: DB_Text, Nullable: true},
-	}))
-
 	mg.AddMigration("Update alert_notification table charset", NewTableCharsetMigration("alert_notification", []*Column{
 		{Name: "name", Type: DB_NVarchar, Length: 190, Nullable: false},
 		{Name: "type", Type: DB_NVarchar, Length: 255, Nullable: false},
 		{Name: "settings", Type: DB_Text, Nullable: false},
 	}))
+
+	mg.AddMigration("add index alert_notification org_id & name", NewAddIndexMigration(alert_notification, alert_notification.Indices[0]))
 
 	notification_journal := Table{
 		Name: "alert_notification_journal",
@@ -187,7 +187,8 @@ func addAlertMigrations(mg *Migrator) {
 	mg.AddMigration("Update uid column values in alert_notification", new(RawSQLMigration).
 		SQLite("UPDATE alert_notification SET uid=printf('%09d',id) WHERE uid IS NULL;").
 		Postgres("UPDATE alert_notification SET uid=lpad('' || id::text,9,'0') WHERE uid IS NULL;").
-		Mysql("UPDATE alert_notification SET uid=lpad(id,9,'0') WHERE uid IS NULL;"))
+		Mysql("UPDATE alert_notification SET uid=lpad(id,9,'0') WHERE uid IS NULL;").
+		Mssql("UPDATE alert_notification SET uid=REPLACE(STR(id, 9),SPACE(1),'0') WHERE uid IS NULL;"))
 
 	mg.AddMigration("Add unique index alert_notification_org_id_uid", NewAddIndexMigration(alert_notification, &Index{
 		Cols: []string{"org_id", "uid"}, Type: UniqueIndex,

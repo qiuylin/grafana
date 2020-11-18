@@ -72,9 +72,6 @@ func addDataSourceMigration(mg *Migrator) {
 	// create v2 table
 	mg.AddMigration("create data_source table v2", NewAddTableMigration(tableV2))
 
-	// add v2 indíces
-	addTableIndicesMigrations(mg, "v2", tableV2)
-
 	//------- copy data from v1 to v2 -------------------
 	mg.AddMigration("copy data_source v1 to v2", NewCopyTableDataMigration("data_source", "data_source_v1", map[string]string{
 		"id":                  "id",
@@ -145,10 +142,14 @@ func addDataSourceMigration(mg *Migrator) {
 		NewRawSQLMigration("").
 			SQLite("UPDATE data_source SET uid=printf('%09d',id);").
 			Postgres("UPDATE data_source SET uid=lpad('' || id::text,9,'0');").
-			Mysql("UPDATE data_source SET uid=lpad(id,9,'0');"),
+			Mysql("UPDATE data_source SET uid=lpad(id,9,'0');").
+			Mssql("UPDATE data_source SET uid=REPLACE(STR(id, 9),SPACE(1),'0');"),
 	)
 
 	mg.AddMigration("Add unique index datasource_org_id_uid", NewAddIndexMigration(tableV2, &Index{
 		Cols: []string{"org_id", "uid"}, Type: UniqueIndex,
 	}))
+
+	// add v2 indíces
+	addTableIndicesMigrations(mg, "v2", tableV2)
 }

@@ -39,7 +39,6 @@ func addTempUserMigrations(mg *Migrator) {
 
 	// create table
 	mg.AddMigration("create temp user table v1-7", NewAddTableMigration(tempUserV1))
-	addTableIndicesMigrations(mg, "v1-7", tempUserV1)
 
 	mg.AddMigration("Update temp_user table charset", NewTableCharsetMigration("temp_user", []*Column{
 		{Name: "email", Type: DB_NVarchar, Length: 190},
@@ -93,6 +92,8 @@ func addTempUserMigrations(mg *Migrator) {
 
 	// Ensure outstanding invites are given a valid lifetime post-migration
 	mg.AddMigration("Set created for temp users that will otherwise prematurely expire", &SetCreatedForOutstandingInvites{})
+	
+	addTableIndicesMigrations(mg, "v1-7", tempUserV1)
 }
 
 type SetCreatedForOutstandingInvites struct {

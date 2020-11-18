@@ -23,9 +23,6 @@ func addAppSettingsMigration(mg *Migrator) {
 
 	mg.AddMigration("create plugin_setting table", NewAddTableMigration(pluginSettingTable))
 
-	//-------  indexes ------------------
-	addTableIndicesMigrations(mg, "v1", pluginSettingTable)
-
 	// add column to store installed version
 	mg.AddMigration("Add column plugin_version to plugin_settings", NewAddColumnMigration(pluginSettingTable, &Column{
 		Name: "plugin_version", Type: DB_NVarchar, Nullable: true, Length: 50,
@@ -37,4 +34,7 @@ func addAppSettingsMigration(mg *Migrator) {
 		{Name: "secure_json_data", Type: DB_Text, Nullable: true},
 		{Name: "plugin_version", Type: DB_NVarchar, Nullable: true, Length: 50},
 	}))
+
+	//-------  indexes ------------------
+	addTableIndicesMigrations(mg, "v1", pluginSettingTable)
 }
