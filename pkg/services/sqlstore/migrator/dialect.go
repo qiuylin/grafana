@@ -63,6 +63,7 @@ var supportedDialects = map[string]dialectFunc{
 	MySQL + "WithHooks":    NewMysqlDialect,
 	SQLite + "WithHooks":   NewSQLite3Dialect,
 	Postgres + "WithHooks": NewPostgresDialect,
+}
 
 func NewDialect(engine *xorm.Engine) Dialect {
 	name := engine.DriverName()

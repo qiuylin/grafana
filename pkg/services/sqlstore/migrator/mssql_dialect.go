@@ -9,38 +9,38 @@ import (
 	"xorm.io/xorm"
 )
 
-type Mssql struct {
+type MSSQLDialect struct {
 	BaseDialect
 }
 
 func NewMssqlDialect(engine *xorm.Engine) Dialect {
-	d := Mssql{}
+	d := MSSQLDialect{}
 	d.BaseDialect.dialect = &d
 	d.BaseDialect.engine = engine
 	d.BaseDialect.driverName = MSSQL
 	return &d
 }
 
-func (db *Mssql) SupportEngine() bool {
+func (db *MSSQLDialect) SupportEngine() bool {
 	return false
 }
 
-func (db *Mssql) Quote(name string) string {
+func (db *MSSQLDialect) Quote(name string) string {
 	return "\"" + name + "\""
 }
 
-func (db *Mssql) AutoIncrStr() string {
+func (db *MSSQLDialect) AutoIncrStr() string {
 	return "IDENTITY"
 }
 
-func (db *Mssql) BooleanStr(value bool) string {
+func (db *MSSQLDialect) BooleanStr(value bool) string {
 	if value {
 		return "1"
 	}
 	return "0"
 }
 
-func (db *Mssql) SqlType(c *Column) string {
+func (db *MSSQLDialect) SQLType(c *Column) string {
 	var res string
 	switch c.Type {
 	case DB_MediumInt, DB_Integer:
@@ -70,7 +70,7 @@ func (db *Mssql) SqlType(c *Column) string {
 	return res
 }
 
-func (db *Mssql) CreateTableSql(table *Table) string {
+func (db *MSSQLDialect) CreateTableSql(table *Table) string {
 	sql := "IF NOT EXISTS (SELECT * FROM sysobjects WHERE NAME='" + table.Name + "' and xtype='U')\n"
 
 	sql += "CREATE TABLE "
@@ -102,7 +102,7 @@ func (db *Mssql) CreateTableSql(table *Table) string {
 	return sql
 }
 
-func (db *Mssql) CopyTableData(sourceTable string, targetTable string, sourceCols []string, targetCols []string) string {
+func (db *MSSQLDialect) CopyTableData(sourceTable string, targetTable string, sourceCols []string, targetCols []string) string {
 	sourceColsSql := db.QuoteColList(sourceCols)
 	targetColsSql := db.QuoteColList(targetCols)
 
@@ -113,18 +113,18 @@ func (db *Mssql) CopyTableData(sourceTable string, targetTable string, sourceCol
 	return sql
 }
 
-func (db *Mssql) DropTable(tableName string) string {
+func (db *MSSQLDialect) DropTable(tableName string) string {
 	return fmt.Sprintf("IF EXISTS (SELECT * FROM sysobjects WHERE id = "+
 		"object_id(N'%s') and OBJECTPROPERTY(id, N'IsUserTable') = 1) "+
 		"DROP TABLE \"%s\"", tableName, tableName)
 }
 
-func (db *Mssql) RenameTable(oldName string, newName string) string {
+func (db *MSSQLDialect) RenameTable(oldName string, newName string) string {
 	quote := db.dialect.Quote
 	return fmt.Sprintf("EXEC sp_rename %s, %s", quote(oldName), quote(newName))
 }
 
-func (db *Mssql) UpdateTableSql(tableName string, columns []*Column) string {
+func (db *MSSQLDialect) UpdateTableSQL(tableName string, columns []*Column) string {
 	var statements = []string{}
 
 	for _, col := range columns {
@@ -134,23 +134,23 @@ func (db *Mssql) UpdateTableSql(tableName string, columns []*Column) string {
 	return strings.Join(statements, ";\n")
 }
 
-func (db *Mssql) AddColumnSql(tableName string, col *Column) string {
+func (db *MSSQLDialect) AddColumnSQL(tableName string, col *Column) string {
 	return fmt.Sprintf("ALTER TABLE %s ADD %s", db.dialect.Quote(tableName), col.StringNoPk(db.dialect))
 }
 
-func (db *Mssql) IndexCheckSql(tableName, indexName string) (string, []interface{}) {
+func (db *MSSQLDialect) IndexCheckSQL(tableName, indexName string) (string, []interface{}) {
 	args := []interface{}{tableName, indexName}
 	sql := "SELECT 1 FROM sys.indexes WHERE object_id = (SELECT object_id FROM sys.objects WHERE name=?) and name=?"
 	return sql, args
 }
 
-func (db *Mssql) ColumnCheckSql(tableName, columnName string) (string, []interface{}) {
+func (db *MSSQLDialect) ColumnCheckSQL(tableName, columnName string) (string, []interface{}) {
 	args := []interface{}{tableName, columnName}
 	sql := "SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(?) AND NAME = ?"
 	return sql, args
 }
 
-func (db *Mssql) CreateIndexSql(tableName string, index *Index) string {
+func (db *MSSQLDialect) CreateIndexSQL(tableName string, index *Index) string {
 	quote := db.dialect.Quote
 	var unique string
 	if index.Type == UniqueIndex {
@@ -173,7 +173,7 @@ func (db *Mssql) CreateIndexSql(tableName string, index *Index) string {
 	return fmt.Sprintf("CREATE%s INDEX %v ON %v (%v) WHERE %v;", unique, quote(idxName), quote(tableName), strings.Join(quotedCols, ","), strings.Join(whereNotNull, "AND "))
 }
 
-func (db *Mssql) CleanDB() error {
+func (db *MSSQLDialect) CleanDB() error {
 	tables, _ := db.engine.DBMetas()
 	sess := db.engine.NewSession()
 	defer sess.Close()
@@ -190,7 +190,7 @@ func (db *Mssql) CleanDB() error {
 	return nil
 }
 
-func (db *Mssql) PreInsertId(table string, sess *xorm.Session) error {
+func (db *MSSQLDialect) PreInsertId(table string, sess *xorm.Session) error {
 
 	if _, err := sess.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s ON;\n", db.dialect.Quote(table))); err != nil {
 		return fmt.Errorf("failed to set indentity insert on: %v, err: %v", table, err)
@@ -199,7 +199,7 @@ func (db *Mssql) PreInsertId(table string, sess *xorm.Session) error {
 	return nil
 }
 
-func (db *Mssql) PostInsertId(table string, sess *xorm.Session) error {
+func (db *MSSQLDialect) PostInsertId(table string, sess *xorm.Session) error {
 
 	if _, err := sess.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF;\n", db.dialect.Quote(table))); err != nil {
 		return fmt.Errorf("failed to set indentity insert on: %v, err: %v", table, err)
@@ -208,15 +208,15 @@ func (db *Mssql) PostInsertId(table string, sess *xorm.Session) error {
 	return nil
 }
 
-func (db *Mssql) Limit(limit int64) string {
+func (db *MSSQLDialect) Limit(limit int64) string {
 	return fmt.Sprintf(" OFFSET 0 ROWS FETCH NEXT %d ROWS ONLY", limit)
 }
 
-func (db *Mssql) LimitOffset(limit int64, offset int64) string {
+func (db *MSSQLDialect) LimitOffset(limit int64, offset int64) string {
 	return fmt.Sprintf(" OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", offset, limit)
 }
 
-func (db *Mssql) isThisError(err error, errcode int32) bool {
+func (db *MSSQLDialect) isThisError(err error, errcode int32) bool {
 	if driverErr, ok := err.(*mssql.Error); ok {
 		if driverErr.SQLErrorNumber() == errcode {
 			return true
@@ -226,11 +226,11 @@ func (db *Mssql) isThisError(err error, errcode int32) bool {
 	return false
 }
 
-func (db *Mssql) IsUniqueConstraintViolation(err error) bool {
+func (db *MSSQLDialect) IsUniqueConstraintViolation(err error) bool {
 	return db.isThisError(err, 2627) || db.isThisError(err, 2601)
 }
 
-func (db *Mssql) ErrorMessage(err error) string {
+func (db *MSSQLDialect) ErrorMessage(err error) string {
 	if driverErr, ok := err.(*mssql.Error); ok {
 		return driverErr.Message
 	}
@@ -238,6 +238,6 @@ func (db *Mssql) ErrorMessage(err error) string {
 	return ""
 }
 
-func (db *Mssql) IsDeadlock(err error) bool {
+func (db *MSSQLDialect) IsDeadlock(err error) bool {
 	return db.isThisError(err, 1205)
 }
