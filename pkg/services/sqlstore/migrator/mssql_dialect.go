@@ -70,7 +70,7 @@ func (db *MSSQLDialect) SQLType(c *Column) string {
 	return res
 }
 
-func (db *MSSQLDialect) CreateTableSql(table *Table) string {
+func (db *MSSQLDialect) CreateTableSQL(table *Table) string {
 	sql := "IF NOT EXISTS (SELECT * FROM sysobjects WHERE NAME='" + table.Name + "' and xtype='U')\n"
 
 	sql += "CREATE TABLE "
@@ -103,14 +103,28 @@ func (db *MSSQLDialect) CreateTableSql(table *Table) string {
 }
 
 func (db *MSSQLDialect) CopyTableData(sourceTable string, targetTable string, sourceCols []string, targetCols []string) string {
-	sourceColsSql := db.QuoteColList(sourceCols)
-	targetColsSql := db.QuoteColList(targetCols)
+	sourceColsSQL := db.QuoteColList(sourceCols)
+	targetColsSQL := db.QuoteColList(targetCols)
 
 	quote := db.dialect.Quote
-	sql := fmt.Sprintf("SET IDENTITY_INSERT %s ON;\n", quote(targetTable))
-	sql += fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s;\n", quote(targetTable), targetColsSql, sourceColsSql, quote(sourceTable))
-	sql += fmt.Sprintf("SET IDENTITY_INSERT %s OFF;\n", quote(targetTable))
-	return sql
+	insertSQL := fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s;\n", quote(targetTable), targetColsSQL, sourceColsSQL, quote(sourceTable))
+	identityInsertSQL := fmt.Sprintf("SET IDENTITY_INSERT %s ON;\n%s\nSET IDENTITY_INSERT %s OFF;", quote(targetTable), insertSQL, quote(targetTable))
+
+	return fmt.Sprintf(
+		"BEGIN TRY\n"+
+			"%s\n"+
+		"END TRY\n"+
+		"BEGIN CATCH\n"+
+			"SELECT ERROR_NUMBER() AS [Error Number], ERROR_MESSAGE() AS [ErrorMessage];\n"+
+			"IF ERROR_NUMBER() IN (544) -- Cannot insert explicit value for identity column when IDENTITY_INSERT is set to OFF.\n"+
+			"BEGIN\n"+
+				"%s\n"+
+			"END\n"+
+			"ELSE\n"+
+			"BEGIN\n"+
+				"THROW -- Throw an exception from the TRY transaction\n"+
+			"END\n"+
+		"END CATCH", insertSQL, identityInsertSQL)
 }
 
 func (db *MSSQLDialect) DropTable(tableName string) string {

@@ -87,13 +87,13 @@ func addAlertMigrations(mg *Migrator) {
 	}
 	// recreate table
 	mg.AddMigration("Create alert_rule_tag table v2", NewAddTableMigration(alertRuleTagTableV2))
-	// recreate indices
-	addTableIndicesMigrations(mg, "Add unique index alert_rule_tag.alert_id_tag_id V2", alertRuleTagTableV2)
 	// copy data
 	mg.AddMigration("copy alert_rule_tag v1 to v2", NewCopyTableDataMigration("alert_rule_tag", "alert_rule_tag_v1", map[string]string{
 		"alert_id": "alert_id",
 		"tag_id":   "tag_id",
 	}))
+	// recreate indices
+	addTableIndicesMigrations(mg, "Add unique index alert_rule_tag.alert_id_tag_id V2", alertRuleTagTableV2)
 
 	mg.AddMigration("drop table alert_rule_tag_v1", NewDropTableMigration("alert_rule_tag_v1"))
 
