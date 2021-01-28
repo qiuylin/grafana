@@ -14,7 +14,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/prometheus/client_golang/prometheus"
-	"xorm.io/core"
+	"xorm.io/xorm/core"
 )
 
 var (

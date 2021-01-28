@@ -147,7 +147,7 @@ func (db *PostgresDialect) TruncateDBTables() error {
 	sess := db.engine.NewSession()
 	defer sess.Close()
 
-	for _, table := range db.engine.Tables {
+	for _, table := range db.engine.GetTables() {
 		switch table.Name {
 		case "":
 			continue

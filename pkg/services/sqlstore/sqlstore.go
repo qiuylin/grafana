@@ -140,7 +140,7 @@ func (ss *SQLStore) ensureMainOrgAndAdminUser() error {
 
 		// ensure admin user
 		if !ss.Cfg.DisableInitAdminCreation {
-			ss.log.Debug("Creating default admin user")
+			ss.log.Debug("Creating default admin user", "ss.Cfg", ss.Cfg)
 			cmd := models.CreateUserCommand{
 				Login:    ss.Cfg.AdminUser,
 				Email:    ss.Cfg.AdminUser + "@localhost",
@@ -249,6 +249,14 @@ func (ss *SQLStore) buildConnectionString() (string, error) {
 		}
 
 		cnnstr = fmt.Sprintf("server=%s;port=%s;database=%s;user id=%s;password=%s;", addr.Host, addr.Port, ss.dbCfg.Name, ss.dbCfg.User, ss.dbCfg.Pwd)
+
+		if ss.dbCfg.SslMode == "true" || ss.dbCfg.SslMode == "none" || ss.dbCfg.SslMode == "false" {
+			if ss.dbCfg.SslMode == "none" {
+				ss.dbCfg.SslMode = "disable" //disable is a bad default for mssql. Need to set to 'none' in order to use mssql driver's "disable" mode
+			}
+			cnnstr += ";encrypt=" + ss.dbCfg.SslMode
+		}
+
 		cnnstr += ss.buildExtraConnectionString('?')
 	case migrator.SQLite:
 		// special case for tests

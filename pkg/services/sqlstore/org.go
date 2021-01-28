@@ -8,6 +8,7 @@ import (
 	"github.com/grafana/grafana/pkg/events"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/log"
 )
 
 const mainOrgName = "Main Org."
@@ -253,11 +254,16 @@ func getOrCreateOrg(sess *DBSession, orgName string) (int64, error) {
 		org.Name = orgName
 	}
 
+	logger := log.New("DEBUG-org")
+	logger.Info("getOrCreateOrg", "org", org)
+
 	org.Created = time.Now()
 	org.Updated = time.Now()
 
 	if org.Id != 0 {
+		logger.Info("getOrCreateOrg", "org.Id", org.Id)
 		if _, err := sess.InsertId(&org); err != nil {
+			logger.Info("getOrCreateOrg", "err", err)
 			return 0, err
 		}
 	} else {
@@ -265,6 +271,8 @@ func getOrCreateOrg(sess *DBSession, orgName string) (int64, error) {
 			return 0, err
 		}
 	}
+
+	logger.Info("getOrCreateOrg", "org.Id", org.Id)
 
 	sess.publishAfterCommit(&events.OrgCreated{
 		Timestamp: org.Created,

@@ -22,6 +22,7 @@ type Org struct {
 	ZipCode  string
 	State    string
 	Country  string
+	BillingEmail  string
 
 	Created time.Time
 	Updated time.Time

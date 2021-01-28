@@ -13,6 +13,7 @@ import (
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/infra/log"
 )
 
 func (ss *SQLStore) addUserQueryAndCommandHandlers() {
@@ -54,11 +55,17 @@ func getOrgIdForNewUser(sess *DBSession, cmd *models.CreateUserCommand) (int64, 
 		orgName = util.StringsFallback2(cmd.Email, cmd.Login)
 	}
 
+	logger := log.New("DEBUG-user")
+	logger.Info("getOrgIdForNewUser", "orgName", orgName)
+
 	return getOrCreateOrg(sess, orgName)
 }
 
 func CreateUser(ctx context.Context, cmd *models.CreateUserCommand) error {
-	return inTransactionCtx(ctx, func(sess *DBSession) error {
+	return inTransactionCtx(ctx, func(sess *DBSession) error {	
+		logger := log.New("DEBUG-user")
+		logger.Info("CreateUser")
+
 		orgId, err := getOrgIdForNewUser(sess, cmd)
 		if err != nil {
 			return err
@@ -151,6 +158,10 @@ func CreateUser(ctx context.Context, cmd *models.CreateUserCommand) error {
 }
 
 func GetUserById(query *models.GetUserByIdQuery) error {
+	
+	logger := log.New("DEBUG-user")
+	logger.Info("GetUserById")
+
 	user := new(models.User)
 	has, err := x.Id(query.Id).Get(user)
 

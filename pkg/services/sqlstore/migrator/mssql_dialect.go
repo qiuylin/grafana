@@ -204,24 +204,6 @@ func (db *MSSQLDialect) CleanDB() error {
 	return nil
 }
 
-func (db *MSSQLDialect) PreInsertId(table string, sess *xorm.Session) error {
-
-	if _, err := sess.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s ON;\n", db.dialect.Quote(table))); err != nil {
-		return fmt.Errorf("failed to set indentity insert on: %v, err: %v", table, err)
-	}
-
-	return nil
-}
-
-func (db *MSSQLDialect) PostInsertId(table string, sess *xorm.Session) error {
-
-	if _, err := sess.Exec(fmt.Sprintf("SET IDENTITY_INSERT %s OFF;\n", db.dialect.Quote(table))); err != nil {
-		return fmt.Errorf("failed to set indentity insert on: %v, err: %v", table, err)
-	}
-
-	return nil
-}
-
 func (db *MSSQLDialect) Limit(limit int64) string {
 	return fmt.Sprintf(" OFFSET 0 ROWS FETCH NEXT %d ROWS ONLY", limit)
 }

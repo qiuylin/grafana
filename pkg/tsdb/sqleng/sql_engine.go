@@ -21,7 +21,7 @@ import (
 
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
-	"xorm.io/core"
+	"xorm.io/xorm/core"
 	"xorm.io/xorm"
 )
 
